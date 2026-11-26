@@ -1,15 +1,54 @@
-// Sitio estático de EasyNeuRo en Cloudflare Workers.
-// Solo se publica lo que está dentro de public/. Nada fuera de esa carpeta
-// (por ejemplo fase3-clinica/) se sube a Cloudflare.
+// EasyNeuRo en Cloudflare Workers.
+// - Sitio estático: solo se publica lo que está dentro de public/. Nada fuera de
+//   esa carpeta (por ejemplo fase3-clinica/) se sube a Cloudflare.
+// - Servidor (server/index.js): cuentas Lite/PRO y la red de puntas de NeuroVisor.
+//   Atiende solo las rutas /api/...; todo lo demás sale de public/.
+//   Los pesos de la red NO están en el repositorio: se cargan en la base D1.
 {
   "name": "easyneuro",
+  "main": "server/index.js",
   "compatibility_date": "2026-11-26",
   "assets": {
-    "directory": "./public"
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  // Base de datos de producción (cuentas, sesiones, uso, modelo).
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "neurovisor",
+      "database_id": "2372a920-9c9b-446e-9f08-db133c6dabfd"
+    }
+  ],
+  "vars": {
+    "ENTORNO": "produccion"
+  },
+  // Registros: solo los errores que escribe el servidor. Sin «invocation_logs», porque
+  // Cloudflare guardaría los encabezados de cada pedido (incluidos el token de la
+  // cuenta y la clave de administrador).
+  "observability": {
+    "enabled": true,
+    "logs": { "invocation_logs": false }
   },
   // Producción: easyneuro.<subdominio>.workers.dev (rama main, «wrangler deploy»).
   "workers_dev": true,
   // Vistas previas de las otras ramas («wrangler preview»). Las URL son públicas.
+  // Usan una base de PRUEBAS aparte: nunca tocan las cuentas reales.
   "preview_urls": true,
-  "previews": {}
+  "previews": {
+    "d1_databases": [
+      {
+        "binding": "DB",
+        "database_name": "neurovisor-pruebas",
+        "database_id": "4d1abbd0-d588-4ff3-9751-babe5c126922"
+      }
+    ],
+    "vars": {
+      "ENTORNO": "pruebas"
+    },
+    "observability": {
+      "enabled": true,
+      "logs": { "invocation_logs": false }
+    }
+  }
 }

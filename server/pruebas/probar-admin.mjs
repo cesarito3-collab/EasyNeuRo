@@ -1,0 +1,84 @@
+// Prueba de la página /admin en un navegador sin ventana, contra el servidor en este proceso (D1 imitada con SQLite).
+// uso: node server/pruebas/probar-admin.mjs server - [captura.png]   (necesita Playwright con Chromium)
+import { createRequire } from "module";
+import { pathToFileURL } from "url";
+import { createHash } from "crypto";
+import fs from "fs";
+const require = createRequire(import.meta.url);
+const { chromium } = require("playwright");
+const [srvDir, wFile] = process.argv.slice(2);
+const worker = (await import(pathToFileURL(srvDir + "/index.js"))).default;
+const { d1Local } = await import(pathToFileURL(srvDir + "/pruebas/d1-local.mjs"));
+const env = { DB: d1Local(), ENTORNO: "pruebas" };
+const BASE = "https://easyneuro-prueba.local";
+const html = fs.readFileSync(srvDir + "/../public/admin.html");
+await worker.fetch(new Request(BASE + "/api/salud"), env);
+await worker.fetch(new Request(BASE + "/api/admin/estado"), env);
+const ADM = "ADM-PRUEBA-0000-0000";
+env.DB._db.prepare("INSERT INTO ajustes (clave, valor) VALUES ('admin_hash', ?)").run(createHash("sha256").update("admin:" + ADM).digest("hex"));
+let n = 0, f = 0; const ok = (c, t) => { n++; if (!c) f++; console.log((c ? "  ok: " : "  FALLA: ") + t); };
+const b = await chromium.launch(); const ctx = await b.newContext({ viewport: { width: 390, height: 800 } }); const p = await ctx.newPage();
+const errs = []; p.on("pageerror", (e) => errs.push(e.message)); p.on("dialog", (d) => d.accept());
+await ctx.route(BASE + "/**", async (route) => {
+  const rq = route.request(), u = new URL(rq.url());
+  if (u.pathname === "/admin" || u.pathname === "/admin.html") return route.fulfill({ status: 200, contentType: "text/html; charset=utf-8", body: html });
+  const h = { ...rq.headers() }; delete h["content-length"]; const body = rq.postDataBuffer();
+  const r = await worker.fetch(new Request(rq.url(), { method: rq.method(), headers: h, body: body && body.length ? body : undefined }), env);
+  route.fulfill({ status: r.status, headers: Object.fromEntries(r.headers), body: Buffer.from(await r.arrayBuffer()) });
+});
+await p.goto(BASE + "/admin");
+await p.fill("#clave", "ADM-MAL"); await p.click("#fEntrar button[type=submit], #fEntrar button");
+await p.waitForTimeout(400);
+ok(/incorrecta/.test(await p.textContent("#mEntrar")), "clave equivocada: " + (await p.textContent("#mEntrar")));
+await p.fill("#clave", ADM); await p.click("#fEntrar button[type=submit], #fEntrar button");
+await p.waitForSelector("#panel:not(.oculto):not([hidden])", { timeout: 5000 }).catch(() => {});
+await p.waitForTimeout(500);
+const est = await p.textContent("#estado");
+ok(/PRUEBAS/i.test(est) && /no está cargada|sin cargar|no cargada/i.test(est), "panel: aviso de servidor de pruebas y red sin cargar → " + est.replace(/\s+/g, " ").slice(0, 200));
+// cuenta nueva
+await p.fill("#nEmail", "doctora@ejemplo.com"); await p.fill("#nNombre", "Dra. Ejemplo"); await p.selectOption("#nPlan", "pro"); await p.fill("#nVence", "2027-12-31");
+await p.click("#fNueva button[type=submit], #fNueva button");
+await p.waitForSelector("#dCodigo[open]", { timeout: 5000 });
+const cod = (await p.textContent("#dValor")).trim();
+ok(/^NV-[0-9A-Z]{4}(-[0-9A-Z]{4}){3}$/.test(cod), "cuenta creada, el código se muestra una vez: " + cod.slice(0, 7) + "…");
+await p.click("#dCerrar");
+await p.waitForTimeout(400);
+let filas = await p.textContent("#lista");
+ok(/doctora@ejemplo.com/.test(filas) && /PRO/.test(filas), "aparece en la lista como PRO");
+// el médico entra con ese código
+let r = await worker.fetch(new Request(BASE + "/api/entrar", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: "doctora@ejemplo.com", codigo: cod, equipo: "Chrome · Windows" }) }), env);
+const tok = (await r.json()).token; ok(r.status === 200 && tok, "el médico entra con el código");
+// acciones
+const boton = (a) => p.click(`#lista [data-a="${a}"]`);
+await boton("lite"); await p.waitForTimeout(400);
+r = await worker.fetch(new Request(BASE + "/api/yo", { headers: { Authorization: "Bearer " + tok } }), env);
+ok((await r.json()).cuenta.plan === "lite", "«Pasar a Lite» se aplica en el acto");
+await boton("pro"); await p.waitForTimeout(300);
+await boton("off"); await p.waitForTimeout(400);
+r = await worker.fetch(new Request(BASE + "/api/yo", { headers: { Authorization: "Bearer " + tok } }), env);
+ok(r.status === 403, "«Desactivar» corta el acceso (" + r.status + ")");
+await boton("on"); await p.waitForTimeout(300);
+await boton("editar"); await p.waitForSelector("#dEditar[open]");
+await p.fill("#eHoras", "5"); await p.fill("#eEquipos", "1"); await p.click("#eGuardar"); await p.waitForTimeout(400);
+filas = await p.textContent("#lista");
+ok(/5 h|5,0 h|5 horas|5\b/.test(filas), "«Cambiar…» guarda horas y equipos");
+await boton("codigo"); await p.waitForSelector("#dCodigo[open]");
+const cod2 = (await p.textContent("#dValor")).trim(); await p.click("#dCerrar");
+r = await worker.fetch(new Request(BASE + "/api/yo", { headers: { Authorization: "Bearer " + tok } }), env);
+ok(cod2 !== cod && r.status === 401, "«Código nuevo»: el viejo no sirve y se cierran sus sesiones");
+await p.click("#bRegistro"); await p.waitForTimeout(400);
+const reg = await p.textContent("#registro");
+ok(/doctora@ejemplo.com/.test(reg), "registro de cambios visible");
+await p.screenshot({ path: process.argv[4] || "/tmp/admin.png", fullPage: true });
+await boton("borrar"); await p.waitForTimeout(400);
+ok(!/doctora@ejemplo.com/.test(await p.textContent("#lista")), "«Borrar» quita la cuenta");
+// rotar clave
+await p.click("#bClave"); await p.waitForSelector("#dCodigo[open]");
+const nueva = (await p.textContent("#dValor")).trim(); await p.click("#dCerrar");
+r = await worker.fetch(new Request(BASE + "/api/admin/estado", { headers: { "X-Admin-Clave": ADM } }), env);
+const r2 = await worker.fetch(new Request(BASE + "/api/admin/estado", { headers: { "X-Admin-Clave": nueva } }), env);
+ok(/^ADM-/.test(nueva) && r.status === 401 && r2.status === 200, "cambiar la clave: la vieja deja de servir, la nueva sirve");
+const ancho = await p.evaluate(() => document.documentElement.scrollWidth);
+ok(ancho <= 390, "en celular no hay desplazamiento lateral (" + ancho + " px)");
+ok(errs.length === 0, "sin errores de JavaScript " + errs.join(" | "));
+await b.close(); console.log(`${n - f}/${n} bien`); process.exit(f ? 1 : 0);
