@@ -1,0 +1,44 @@
+{
+  "id": "clasificacion_crisis",
+  "titulo": "Clasificación de crisis epilépticas",
+  "estado": "pendiente_confirmacion",
+  "aviso": "PENDIENTE: el investigador debe confirmar qué referencia se adopta. Mientras el estado no sea 'confirmada', el conversor no corre con datos reales.",
+  "referencia_confirmada": {
+    "cita": "",
+    "doi": "",
+    "confirmada_por": "",
+    "fecha": ""
+  },
+  "candidatas_verificadas_en_pubmed": [
+    {
+      "cita": "Beniczky S, Trinka E, Wirrell E, et al. Updated classification of epileptic seizures: Position paper of the International League Against Epilepsy. Epilepsia. 2025;66(6):1804-1823.",
+      "doi": "10.1111/epi.18338",
+      "pmid": "40264351",
+      "comentario": "Clasificación vigente (actualiza la de 2017). Recomendada para crisis_clase, crisis_conciencia y crisis_tipo."
+    },
+    {
+      "cita": "Fisher RS, Cross JH, French JA, et al. Operational classification of seizure types by the International League Against Epilepsy. Epilepsia. 2017;58(4):522-530.",
+      "doi": "10.1111/epi.13670",
+      "pmid": "28276060",
+      "comentario": "Clasificación anterior (awareness como clasificador). Solo si el centro sigue codificando con 2017."
+    }
+  ],
+  "clases": [
+    "focal",
+    "generalizada",
+    "desconocida_si_focal_o_generalizada",
+    "no_clasificada"
+  ],
+  "conciencia": [
+    "preservada",
+    "alterada",
+    "indeterminada"
+  ],
+  "grupos_generalizadas": [
+    "ausencia",
+    "tonico_clonica_generalizada",
+    "otra_generalizada"
+  ],
+  "nota_valores": "clases, conciencia y grupos_generalizadas salen del resumen de Beniczky 2025 (PMID 40264351): cuatro clases, conciencia alterada o preservada (si no se puede determinar se usa la clase madre) y tres grupos de generalizadas. La lista completa de los 21 tipos queda vacía hasta que se confirme la referencia y se transcriba de la tabla original.",
+  "tipos": []
+}

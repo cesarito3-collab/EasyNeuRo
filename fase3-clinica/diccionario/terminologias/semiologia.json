@@ -1,0 +1,49 @@
+{
+  "id": "semiologia",
+  "titulo": "Descriptores semiológicos (secuencia cronológica de la crisis)",
+  "estado": "pendiente_confirmacion",
+  "aviso": "PENDIENTE: falta que el investigador confirme la referencia («Beniczky et al., año a confirmar»). Hay tres trabajos de Beniczky que encajan y no son intercambiables; ver docs/REFERENCIAS.md.",
+  "referencia_confirmada": {
+    "cita": "",
+    "doi": "",
+    "confirmada_por": "",
+    "fecha": ""
+  },
+  "candidatas_verificadas_en_pubmed": [
+    {
+      "cita": "Beniczky S, Tatum WO, Blumenfeld H, et al. Seizure semiology: ILAE glossary of terms and their significance. Epileptic Disord. 2022;24(3):447-495.",
+      "doi": "10.1684/epd.2022.1430",
+      "pmid": "35770761",
+      "comentario": "Glosario de términos semiológicos con su valor localizador y lateralizador. Útil para los descriptores, pero es anterior a la clasificación 2025."
+    },
+    {
+      "cita": "Beniczky S, Trinka E, Wirrell E, et al. A practical guide to the updated seizure classification 2025. Epileptic Disord. 2025;27(6):1087-1104.",
+      "doi": "10.1002/epd2.70110",
+      "pmid": "41081650",
+      "comentario": "Trae una tabla completa de descriptores semiológicos alineada con la clasificación 2025 (versión ampliada, con secuencia temporal). Es la candidata más coherente con clasificacion-crisis.json."
+    }
+  ],
+  "descriptores": [],
+  "descriptores_provisionales": {
+    "aviso": "PROVISIONALES: solo para probar el código con registros inventados. Se borran cuando se transcriba la tabla de la referencia confirmada.",
+    "valores": [
+      "aura_epigastrica",
+      "aura_experiencial",
+      "aura_sensitiva",
+      "aura_visual",
+      "detencion_del_comportamiento",
+      "automatismos_oroalimentarios",
+      "automatismos_manuales",
+      "postura_distonica",
+      "version_cefalica",
+      "actividad_clonica",
+      "actividad_tonica",
+      "hipermotora",
+      "vocalizacion",
+      "alteracion_del_lenguaje_ictal",
+      "afasia_postictal",
+      "paresia_postictal"
+    ]
+  },
+  "lado_aplica": true
+}
