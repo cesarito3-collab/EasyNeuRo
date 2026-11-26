@@ -1,0 +1,15 @@
+// Sitio estático de EasyNeuRo en Cloudflare Workers.
+// Solo se publica lo que está dentro de public/. Nada fuera de esa carpeta
+// (por ejemplo fase3-clinica/) se sube a Cloudflare.
+{
+  "name": "easyneuro",
+  "compatibility_date": "2026-11-26",
+  "assets": {
+    "directory": "./public"
+  },
+  // Producción: easyneuro.<subdominio>.workers.dev (rama main, «wrangler deploy»).
+  "workers_dev": true,
+  // Vistas previas de las otras ramas («wrangler preview»). Las URL son públicas.
+  "preview_urls": true,
+  "previews": {}
+}

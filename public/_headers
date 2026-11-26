@@ -1,0 +1,5 @@
+# Pide a los buscadores que no indexen el sitio. Quitar estas líneas cuando se quiera que aparezca en Google.
+/*
+  X-Robots-Tag: noindex, nofollow
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
