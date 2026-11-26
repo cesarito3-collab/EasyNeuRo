@@ -1,0 +1,11 @@
+# Nunca subir datos de pacientes ni la configuración local de la puerta.
+datos/
+privado/
+salida/
+CONFIDENCIAL_*
+*.edf
+*.EDF
+*.bdf
+*.BDF
+config/fase3.config.json
+node_modules/

@@ -1,0 +1,19 @@
+{
+  "_leeme": "Copie este archivo como fase3.config.json (no se sube al repositorio) y complételo SOLO cuando cada requisito esté cumplido de verdad. Ver docs/PENDIENTES.md.",
+  "aprobacion_cei": {
+    "comite": "",
+    "numero_dictamen": "",
+    "fecha_dictamen": "",
+    "incluye_datos_clinicos_fase3": false
+  },
+  "diccionario_validado": {
+    "bioestadistico": "",
+    "version_validada": "",
+    "fecha": ""
+  },
+  "cita_semiologia": {
+    "referencia": "",
+    "doi": "",
+    "confirmada_por_investigador": false
+  }
+}

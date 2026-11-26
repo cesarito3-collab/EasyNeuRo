@@ -1,0 +1,12 @@
+{
+  "name": "neurovisor-fase3-clinica",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Base para el conversor/anonimizador de datos clínicos estructurados (Fase 3). Sin dependencias. BLOQUEADO para datos reales.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "docs": "node tools/generar-documentos.js"
+  },
+  "engines": {"node": ">=20"}
+}
