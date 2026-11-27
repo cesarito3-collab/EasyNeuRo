@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>NeuroVisor · Cuentas</title>
+<style>
+:root { --bg:#f6f7f9; --card:#fff; --tx:#17202a; --mut:#5d6b7a; --line:#dde2e8; --acc:#1f5fbf; --ok:#17803d; --warn:#a15c00; --err:#b42318; --pro:#5b3cc4; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root { --bg:#12161b; --card:#1a2027; --tx:#e6eaee; --mut:#9aa7b4; --line:#2c343e; --acc:#6ea8ff; --ok:#4cc27a; --warn:#e0a040; --err:#ff7a6e; --pro:#a68bff; color-scheme: dark; } }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--tx); font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+main { max-width:1100px; margin:0 auto; padding:16px; }
+h1 { font-size:20px; margin:4px 0 2px; } h2 { font-size:16px; margin:0 0 10px; }
+.sub { color:var(--mut); margin:0 0 16px; font-size:13px; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:14px; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; }
+label { display:block; font-size:12px; color:var(--mut); margin-bottom:3px; }
+input, select, textarea { width:100%; font:inherit; color:var(--tx); background:var(--bg); border:1px solid var(--line); border-radius:7px; padding:7px 9px; }
+button { font:inherit; border:1px solid var(--line); background:var(--card); color:var(--tx); border-radius:7px; padding:7px 12px; cursor:pointer; }
+button.pri { background:var(--acc); border-color:var(--acc); color:#fff; } button.peligro { color:var(--err); }
+button:disabled { opacity:.5; cursor:default; }
+.fila { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.msg { margin:8px 0 0; font-size:14px; } .msg.ok { color:var(--ok); } .msg.err { color:var(--err); }
+.codigo { font:600 20px/1.3 ui-monospace,Consolas,monospace; letter-spacing:1px; background:var(--bg); border:1px dashed var(--acc); padding:10px 12px; border-radius:8px; user-select:all; word-break:break-all; }
+.aviso { border-left:4px solid var(--warn); padding:8px 10px; background:var(--bg); border-radius:6px; font-size:13px; }
+table { width:100%; border-collapse:collapse; font-size:14px; }
+th, td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+th { font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:var(--mut); font-weight:600; }
+.chip { display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px; border:1px solid currentColor; }
+.chip.pro { color:var(--pro); } .chip.lite { color:var(--mut); } .chip.off { color:var(--err); } .chip.venc { color:var(--warn); }
+.mut { color:var(--mut); font-size:12px; }
+.acciones { display:flex; gap:6px; flex-wrap:wrap; } .acciones button { padding:4px 8px; font-size:13px; }
+.oculto { display:none !important; }
+.tabla { overflow-x:auto; }
+@media (max-width:700px) { thead { display:none; } tr { display:block; border-bottom:1px solid var(--line); padding:8px 0; } td { display:block; border:0; padding:3px 0; } }
+dialog { border:1px solid var(--line); border-radius:10px; background:var(--card); color:var(--tx); max-width:520px; width:calc(100% - 32px); }
+dialog::backdrop { background:rgba(0,0,0,.45); }
+</style>
+</head>
+<body>
+<main>
+  <h1>NeuroVisor · Cuentas de médicos</h1>
+  <p class="sub">Página del administrador. Acá se crean las cuentas, se elige Lite o PRO y se corta el acceso. Los cambios valen en el acto: el servidor revisa la cuenta en cada análisis.</p>
+
+  <section id="entrar" class="card">
+    <h2>Entrar como administrador</h2>
+    <form id="fEntrar" class="fila">
+      <input id="clave" type="password" autocomplete="current-password" placeholder="Clave de administrador (ADM-…)" style="max-width:360px" required>
+      <button class="pri">Entrar</button>
+    </form>
+    <p id="mEntrar" class="msg"></p>
+  </section>
+
+  <div id="panel" class="oculto">
+    <section class="card">
+      <div class="fila" style="justify-content:space-between">
+        <h2 style="margin:0">Estado del servidor</h2>
+        <div class="fila"><button id="bRecargar">Actualizar</button><button id="bSalir">Salir</button></div>
+      </div>
+      <div id="estado" class="mut" style="margin-top:8px"></div>
+    </section>
+
+    <section class="card">
+      <h2>Nueva cuenta</h2>
+      <form id="fNueva">
+        <div class="grid">
+          <div><label for="nEmail">Correo del médico</label><input id="nEmail" type="email" required placeholder="nombre@correo.com"></div>
+          <div><label for="nNombre">Nombre</label><input id="nNombre" placeholder="Dra. Ana Pérez"></div>
+          <div><label for="nPlan">Plan</label><select id="nPlan"><option value="pro">PRO</option><option value="lite">Lite</option></select></div>
+          <div><label for="nVence">Vence (vacío = no vence)</label><input id="nVence" type="date"></div>
+          <div><label for="nEquipos">Equipos a la vez</label><input id="nEquipos" type="number" min="1" max="20" value="2"></div>
+          <div><label for="nHoras">Horas de EEG por día</label><input id="nHoras" type="number" min="1" max="500" value="24"></div>
+        </div>
+        <div style="margin-top:10px"><label for="nNota">Nota (solo la ve usted)</label><input id="nNota" placeholder="Ej.: pagó marzo por PayPal"></div>
+        <div class="fila" style="margin-top:10px"><button class="pri">Crear cuenta</button></div>
+        <p id="mNueva" class="msg"></p>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Cuentas</h2>
+      <div class="tabla"><table>
+        <thead><tr><th>Médico</th><th>Plan</th><th>Uso</th><th>Equipos</th><th>Acciones</th></tr></thead>
+        <tbody id="lista"></tbody>
+      </table></div>
+      <p id="mLista" class="msg"></p>
+    </section>
+
+    <section class="card">
+      <h2>Seguridad</h2>
+      <div class="fila"><button id="bClave">Cambiar la clave de administrador</button><button id="bRegistro">Ver registro de cambios</button></div>
+      <p class="mut">Cambie la clave la primera vez que entre: así solo usted la conoce. Guárdela en un lugar seguro; si la pierde, hay que generar otra desde Cloudflare.</p>
+      <div id="registro" class="mut"></div>
+    </section>
+  </div>
+</main>
+
+<dialog id="dCodigo">
+  <h2 id="dTitulo">Código de acceso</h2>
+  <p id="dTexto"></p>
+  <div id="dValor" class="codigo"></div>
+  <p class="aviso" style="margin-top:10px">Cópielo ahora: <b>no se vuelve a mostrar</b>. Si se pierde, genere otro.</p>
+  <div class="fila" style="margin-top:10px"><button id="dCopiar" class="pri">Copiar</button><button id="dCerrar">Listo</button></div>
+</dialog>
+
+<dialog id="dEditar">
+  <h2>Cambiar cuenta</h2>
+  <p id="eEmail" class="mut"></p>
+  <div class="grid">
+    <div><label for="eNombre">Nombre</label><input id="eNombre"></div>
+    <div><label for="ePlan">Plan</label><select id="ePlan"><option value="pro">PRO</option><option value="lite">Lite</option></select></div>
+    <div><label for="eVence">Vence (vacío = no vence)</label><input id="eVence" type="date"></div>
+    <div><label for="eEquipos">Equipos a la vez</label><input id="eEquipos" type="number" min="1" max="20"></div>
+    <div><label for="eHoras">Horas de EEG por día</label><input id="eHoras" type="number" min="1" max="500"></div>
+  </div>
+  <div style="margin-top:10px"><label for="eNota">Nota</label><input id="eNota"></div>
+  <p id="mEditar" class="msg"></p>
+  <div class="fila" style="margin-top:10px"><button id="eGuardar" class="pri">Guardar</button><button id="eCancelar">Cancelar</button></div>
+</dialog>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+let CLAVE = "";
+try { CLAVE = sessionStorage.getItem("nvAdmin") || ""; } catch {}
+const fmt = (ms) => (ms ? new Date(ms).toLocaleString("es-PY", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—");
+const fdia = (ms) => (ms ? new Date(ms).toLocaleDateString("es-PY", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Asuncion" }) : "");
+const iso = (ms) => (ms ? new Date(ms - 3 * 3600000).toISOString().slice(0, 10) : "");
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+function msg(id, txt, kind) { const e = $(id); e.textContent = txt || ""; e.className = "msg " + (kind || ""); }
+async function api(path, opt = {}) {
+  const r = await fetch("/api/admin/" + path, { method: opt.method || "GET", headers: { "X-Admin-Clave": CLAVE, ...(opt.body ? { "Content-Type": "application/json" } : {}) }, body: opt.body ? JSON.stringify(opt.body) : undefined });
+  let j = null;
+  try { j = await r.json(); } catch {}
+  if (!r.ok || !j || !j.ok) { const e = new Error((j && j.msg) || "No se pudo conectar con el servidor."); e.status = r.status; throw e; }
+  return j;
+}
+function mostrarCodigo(titulo, texto, valor) {
+  $("dTitulo").textContent = titulo; $("dTexto").textContent = texto; $("dValor").textContent = valor;
+  $("dCodigo").showModal();
+}
+$("dCopiar").onclick = async () => { try { await navigator.clipboard.writeText($("dValor").textContent); $("dCopiar").textContent = "Copiado ✓"; } catch { $("dCopiar").textContent = "Selecciónelo y copie"; } setTimeout(() => ($("dCopiar").textContent = "Copiar"), 2000); };
+$("dCerrar").onclick = () => $("dCodigo").close();
+
+async function entrar(clave) {
+  CLAVE = clave.trim();
+  try {
+    await cargar();
+    try { sessionStorage.setItem("nvAdmin", CLAVE); } catch {}
+    $("entrar").classList.add("oculto"); $("panel").classList.remove("oculto");
+  } catch (e) {
+    CLAVE = "";
+    try { sessionStorage.removeItem("nvAdmin"); } catch {}
+    $("entrar").classList.remove("oculto"); $("panel").classList.add("oculto");
+    msg("mEntrar", e.message, "err");
+  }
+}
+$("fEntrar").onsubmit = (e) => { e.preventDefault(); msg("mEntrar", "Revisando…"); entrar($("clave").value); };
+$("bSalir").onclick = () => { CLAVE = ""; try { sessionStorage.removeItem("nvAdmin"); } catch {} location.reload(); };
+$("bRecargar").onclick = () => cargar().catch((e) => msg("mLista", e.message, "err"));
+
+let CUENTAS = [];
+async function cargar() {
+  const [st, cs] = await Promise.all([api("estado"), api("cuentas")]);
+  const m = st.modelo;
+  $("estado").innerHTML =
+    `${st.entorno === "pruebas" ? "<b>Servidor de PRUEBAS</b> (vista previa) · " : ""}Red de puntas: ${m.cargado ? `<b style="color:var(--ok)">cargada</b> (versión ${esc(m.ver)}, umbrales baja ${m.umbrales?.baja} · media ${m.umbrales?.media} · alta ${m.umbrales?.alta})` : `<b style="color:var(--err)">no cargada</b>: los médicos PRO no pueden usarla todavía`}` +
+    ` · ${st.cuentas} cuentas, ${st.pro} con PRO vigente · hoy: ${st.horas_hoy} h de EEG analizadas en ${st.pedidos_hoy} tramos.`;
+  CUENTAS = cs.cuentas;
+  const ahora = Date.now();
+  $("lista").innerHTML = CUENTAS.length ? CUENTAS.map((c) => {
+    const venc = c.plan === "pro" && c.vence && c.vence <= ahora;
+    const chip = !c.activa ? '<span class="chip off">DESACTIVADA</span>' : venc ? '<span class="chip venc">PRO VENCIDO</span>' : c.plan === "pro" ? '<span class="chip pro">PRO</span>' : '<span class="chip lite">LITE</span>';
+    return `<tr data-id="${c.id}">
+      <td><b>${esc(c.nombre || "(sin nombre)")}</b><br><span class="mut">${esc(c.email)}</span>${c.nota ? `<br><span class="mut">📝 ${esc(c.nota)}</span>` : ""}</td>
+      <td>${chip}<br><span class="mut">${c.vence ? (venc ? "venció el " : "hasta el ") + fdia(c.vence) : c.plan === "pro" ? "sin vencimiento" : ""}</span></td>
+      <td>${c.horas_hoy} h hoy<br><span class="mut">${c.horas_30d} h en 30 días · límite ${c.limite_horas_dia} h/día<br>último uso ${fmt(c.ultimo_uso)}</span></td>
+      <td>Equipos: ${c.equipos} de ${c.max_equipos}${c.equipos_txt ? `<br><span class="mut">${esc(c.equipos_txt)}</span>` : ""}</td>
+      <td><div class="acciones">
+        ${c.plan === "pro" ? '<button data-a="lite">Pasar a Lite</button>' : '<button data-a="pro">Pasar a PRO</button>'}
+        ${c.activa ? '<button data-a="off" class="peligro">Desactivar</button>' : '<button data-a="on">Activar</button>'}
+        <button data-a="editar">Cambiar…</button>
+        <button data-a="codigo">Código nuevo</button>
+        <button data-a="cerrar">Cerrar sesiones</button>
+        <button data-a="borrar" class="peligro">Borrar</button>
+      </div></td></tr>`;
+  }).join("") : '<tr><td colspan="5" class="mut">Todavía no hay cuentas. Cree la primera arriba (puede ser la suya).</td></tr>';
+}
+$("lista").addEventListener("click", async (e) => {
+  const b = e.target.closest("button[data-a]"); if (!b) return;
+  const id = Number(b.closest("tr").dataset.id), c = CUENTAS.find((x) => x.id === id), a = b.dataset.a;
+  msg("mLista", "");
+  try {
+    if (a === "pro" || a === "lite") await api(`cuentas/${id}`, { method: "POST", body: { plan: a } });
+    else if (a === "on" || a === "off") {
+      if (a === "off" && !confirm(`¿Desactivar la cuenta de ${c.email}? Deja de poder usar NeuroVisor PRO en el acto. Se puede volver a activar.`)) return;
+      await api(`cuentas/${id}`, { method: "POST", body: { activa: a === "on" } });
+    } else if (a === "codigo") {
+      if (!confirm(`¿Generar un código nuevo para ${c.email}? El código viejo deja de servir y se cierran sus sesiones.`)) return;
+      const j = await api(`cuentas/${id}/codigo`, { method: "POST" });
+      mostrarCodigo("Código nuevo", `Envíeselo a ${c.email}. Entra con su correo y este código.`, j.codigo);
+    } else if (a === "cerrar") { await api(`cuentas/${id}/cerrar`, { method: "POST" }); msg("mLista", `Se cerraron las sesiones de ${c.email}. Puede volver a entrar con su código.`, "ok"); }
+    else if (a === "borrar") {
+      if (!confirm(`¿BORRAR la cuenta de ${c.email}? No se puede deshacer. Si solo quiere cortar el acceso, use «Desactivar».`)) return;
+      await api(`cuentas/${id}/borrar`, { method: "POST" });
+    } else if (a === "editar") return editar(c);
+    await cargar();
+  } catch (err) { msg("mLista", err.message, "err"); }
+});
+let EDIT = null;
+function editar(c) {
+  EDIT = c;
+  $("eEmail").textContent = c.email; $("eNombre").value = c.nombre || ""; $("ePlan").value = c.plan; $("eVence").value = iso(c.vence);
+  $("eEquipos").value = c.max_equipos; $("eHoras").value = c.limite_horas_dia; $("eNota").value = c.nota || ""; msg("mEditar", "");
+  $("dEditar").showModal();
+}
+$("eCancelar").onclick = () => $("dEditar").close();
+$("eGuardar").onclick = async () => {
+  try {
+    await api(`cuentas/${EDIT.id}`, { method: "POST", body: { nombre: $("eNombre").value, plan: $("ePlan").value, vence: $("eVence").value, max_equipos: Number($("eEquipos").value), limite_horas_dia: Number($("eHoras").value), nota: $("eNota").value } });
+    $("dEditar").close(); await cargar();
+  } catch (e) { msg("mEditar", e.message, "err"); }
+};
+$("fNueva").onsubmit = async (e) => {
+  e.preventDefault(); msg("mNueva", "Creando…");
+  try {
+    const email = $("nEmail").value.trim();
+    const j = await api("cuentas", { method: "POST", body: { email, nombre: $("nNombre").value, plan: $("nPlan").value, vence: $("nVence").value, max_equipos: Number($("nEquipos").value), limite_horas_dia: Number($("nHoras").value), nota: $("nNota").value } });
+    msg("mNueva", "");
+    $("fNueva").reset(); $("nEquipos").value = 2; $("nHoras").value = 24;
+    mostrarCodigo("Cuenta creada", `Envíele a ${email} este código. En NeuroVisor PRO toca «Cuenta», escribe su correo y el código.`, j.codigo);
+    await cargar();
+  } catch (err) { msg("mNueva", err.message, "err"); }
+};
+$("bClave").onclick = async () => {
+  if (!confirm("¿Cambiar la clave de administrador? La actual deja de servir. Va a ver la nueva una sola vez.")) return;
+  try {
+    const j = await api("clave", { method: "POST" });
+    CLAVE = j.clave; try { sessionStorage.setItem("nvAdmin", CLAVE); } catch {}
+    mostrarCodigo("Clave de administrador nueva", "Guárdela en un lugar seguro (por ejemplo, el administrador de contraseñas del navegador). Con ella entra a esta página.", j.clave);
+  } catch (e) { msg("mLista", e.message, "err"); }
+};
+$("bRegistro").onclick = async () => {
+  try {
+    const j = await api("registro");
+    $("registro").innerHTML = j.registro.length ? "<ul>" + j.registro.map((r) => `<li>${fmt(r.t)} · ${esc(r.que)}</li>`).join("") + "</ul>" : "Sin cambios registrados.";
+  } catch (e) { msg("mLista", e.message, "err"); }
+};
+if (CLAVE) entrar(CLAVE);
+</script>
+</body>
+</html>
